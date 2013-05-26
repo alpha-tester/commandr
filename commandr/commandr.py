@@ -101,7 +101,7 @@ _ALL_COMMANDS = {}
 _COMMAND_INFO = namedtuple('_COMMAND_INFO', ['name', 'callable', 'category'])
 _COMMAND_LIST = []
 
-def command(command_name, category=None):
+def command(command_name=None, category=None):
   """Decorator that marks a function as a 'command' which can be invoked with
   arguments from the command line. e.g.:
 
@@ -113,13 +113,21 @@ def command(command_name, category=None):
 
     python something.py greet --name=Nick --title=Dr.
 
+  If 'command_name' is not specified, defaults to function name.
+
   If 'category' is specified, commands with the same category are grouped
   together when listing all available commands.
   """
-  def command_decorator(cmd_fn):
-    _ALL_COMMANDS[command_name] = cmd_fn
-    _COMMAND_LIST.append(_COMMAND_INFO(command_name, cmd_fn, category))
+  def command_decorator(cmd_fn, cmd_fn_name=None):
+    final_name = cmd_fn_name or command_name
+    _ALL_COMMANDS[final_name] = cmd_fn
+    _COMMAND_LIST.append(_COMMAND_INFO(final_name, cmd_fn, category))
     return cmd_fn
+
+  # Handle no command_name case.
+  if callable(command_name):
+    cmd_func = command_name
+    return command_decorator(cmd_func, command_name.func_name)
 
   return command_decorator
 
